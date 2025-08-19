@@ -71,3 +71,31 @@ public class drive extends SubsystemBase {
   }
 
 }
+
+
+//Manual tuning typically follows this process:
+
+// Set all gains to zero.
+
+// Determine kg if using an elevator or arm.
+//克服重力的参数，kg从0开始逐渐增加，直到松手电梯能够大概稳定在当前位置，不会下坠
+
+// Select the appropriate Static Feedforward Sign for your closed-loop type.
+//如果是速度控制，就用velocitysign，位置控制就用closedloopsign
+
+// Increase ks until just before the motor moves.
+//逐步增加ks直到电机微微有反应，处在一种临界有反应要动但是没动的状态
+
+// If using velocity setpoints, increase kv
+//  until the output velocity closely matches the velocity setpoints.
+//如果你用速度控制并且需要设定速度到某个值，可以逐步增加kv直到你的速度达到设定值
+//kv'是一个放大系数，当我的速度不够的时候，用这个来提高我的速度到预期值
+
+// Increase kp until the output starts to oscillate around the setpoint.
+//逐步增加kp直到我的当前位置（设定速度）开始在设定的位置（设定速度）附近震动
+
+// Increase kd as much as possible without introducing jittering to the response.
+//逐步增加kd直到引入了新的震动
+
+//通俗的理解：kp决定了电机的劲儿大还是小，握拳，用尽全力握拳就开始发抖，同样电机开始震颤，
+//kp尽可能大胆

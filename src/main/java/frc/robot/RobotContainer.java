@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Motor;
+import frc.robot.subsystems.drive;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -17,10 +18,11 @@ import frc.robot.subsystems.Motor;
 public class RobotContainer {
 
   //joysick
-  private final CommandXboxController m_driverJoystick = new CommandXboxController(0);//two xbox controller
+  private final CommandXboxController m_driverController = new CommandXboxController(0);//two xbox controller
   
   //subsystems
   public final Motor motor = new Motor();
+  public final drive m_drive_subsystem = new drive();
 
 
   //构造函数
@@ -31,15 +33,18 @@ public class RobotContainer {
 
 
   private void configureBindings() {
-    //电机到位50
-    m_driverJoystick.leftBumper().onTrue(motor.Motor_Move_Position1());
+    // //电机到位50
+    // m_driverJoystick.leftBumper().onTrue(motor.Motor_Move_Position1());
 
-    //电机到位100
-    m_driverJoystick.rightBumper().onTrue(motor.Motor_Move_Position2());
+    // //电机到位100
+    // m_driverJoystick.rightBumper().onTrue(motor.Motor_Move_Position2());
 
-    //释放电机
-    m_driverJoystick.start().onTrue(Commands.runOnce(()->motor.releaseMotor()));
-  }
+    // //释放电机
+    // m_driverJoystick.start().onTrue(Commands.runOnce(()->motor.releaseMotor()));
+
+    m_driverController.b()
+        .whileTrue(m_drive_subsystem.motor_Vol_command(50));
+      }
 
 
 }

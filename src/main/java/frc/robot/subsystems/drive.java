@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -24,10 +25,10 @@ public class Drive extends SubsystemBase {
 
 
     //特性：请求制 需要一个request
-    private final VoltageOut m_test_motor_request = new VoltageOut(0.0);
-    private final VoltageOut m_test_motor2_request = new VoltageOut(0.0);
-    private final VoltageOut m_test_motor3_request = new VoltageOut(0.0);
-    private final VoltageOut m_test_motor4_request = new VoltageOut(0.0);
+    private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
+    private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
+    private final VelocityTorqueCurrentFOC m_test_motor3_request = new VelocityTorqueCurrentFOC(0.0);
+    private final VelocityTorqueCurrentFOC m_test_motor4_request = new VelocityTorqueCurrentFOC(0.0);
     //通过m_test_motor_request向上发送请求
     
     //实际控制
@@ -39,32 +40,32 @@ public class Drive extends SubsystemBase {
     //withPosition能够把高级的控控制请求和底层的位置控制建立联系
     //withVelocity能够把高级的控控制请求和底层的速度控制建立联系
 
-    public void setmotorVoltage(double vol) {
-      m_test_motor.setControl(m_test_motor_request.withOutput(vol));
-      m_test_motor2.setControl(m_test_motor_request.withOutput(vol));
+    public void setmotorVelocity(double Position) {
+      m_test_motor.setControl(m_test_motor_request.withVelocity(Position));
+      m_test_motor2.setControl(m_test_motor_request.withVelocity(Position));
 
     }
 
-    public void setmotorVoltage2(double vol) {
-      m_test_motor3.setControl(m_test_motor_request.withOutput(vol));
-      m_test_motor4.setControl(m_test_motor_request.withOutput(vol)); //声明这个控制是速度还是位置
+    public void setmotorVelocity2(double Position) {
+      m_test_motor3.setControl(m_test_motor_request.withVelocity(Position));
+      m_test_motor4.setControl(m_test_motor_request.withVelocity(Position)); //声明这个控制是速度还是位置
     }
 
 
 
 
-    public Command Motor_Voltage_Command(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
+    public Command Motor_Velocity_Command(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
       return runEnd(()->{ //run == runOnce
-                        setmotorVoltage(vol); // Set the motor to move at 1000 units per second
+                        setmotorVelocity(vol); // Set the motor to move at 1000 units per second
                         },
                     ()-> {
-                          setmotorVoltage(0);
+                          setmotorVelocity(0);
                          });
       }
 
-    public Command Motor_Voltage_Command2(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
+    public Command Motor_Velocity_Command2(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
       return run(()->{ //run == runOnce
-                          setmotorVoltage(vol); // Set the motor to move at 1000 units per second
+                          setmotorVelocity(vol); // Set the motor to move at 1000 units per second
                           });
       }
   
@@ -73,12 +74,16 @@ public class Drive extends SubsystemBase {
 
     var motorConfigs = new TalonFXConfiguration();
       
-      motorConfigs.Slot0.kS = 0.2;
+    //这些是每个电机的固定参数
+      motorConfigs.Slot0.kS = 1.5; //kS是电机参数 这句话读到kS然后给他赋值
       motorConfigs.Slot0.kV = 0.0;
       motorConfigs.Slot0.kA = 0;
-      motorConfigs.Slot0.kP = 3;
+      motorConfigs.Slot0.kP = 7;
       motorConfigs.Slot0.kI = 0;
-      motorConfigs.Slot0.kD = 0;
+      motorConfigs.Slot0.kD = 0.1;
+
+
+      //涉及到高级控制 才用到这些参数
       motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
       motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
       motorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
@@ -87,7 +92,15 @@ public class Drive extends SubsystemBase {
 
       m_test_motor.getConfigurator().apply(motorConfigs);
       m_test_motor2.getConfigurator().apply(motorConfigs);
+
+      //voltage控制比较低级 不受pid影响
+
+      //开环控制 ： 敞开的系统 不太准确 当他不准确的时候 他不知道自己不准确 无反馈
+
+      //闭环控制 ： 闭合的系统 相对准确 当他不准确的时候 他知道差值 并调整 有反馈
   }
+
+      
 
   // /**
   //  * Example command factory method.
@@ -162,3 +175,35 @@ public class Drive extends SubsystemBase {
 //远程 a  →  b      本地 a  →  b  ， a  →  c ✔ 
 
 //因为 你在本地 有过 a  →  b 的操作 所以本地不落后于远程
+
+
+
+//电机调试方法！！！
+
+//Set all gains to zero.
+
+// Determine kg if using an elevator or arm.
+//克服重力的参数，kg 从零开始逐渐增加 直到松手 点机能够稳定在当前位置 不会下坠
+
+// Select the appropriate Static Feedforward Sign for your closed-loop type.
+//选合适的控制类型 如果是速度就用 ： velocity  位置控制就用 ： closedLoop
+
+// Increase ks until just before the motor moves.
+// 逐步增加 ks 直到点机微微有反应 处在一种临界 要动 但 不完全动
+// ks 克服静摩擦力 
+
+// If using velocity setpoints, increase 
+// until the output velocity closely matches the velocity setpoints.
+// 如果你用了速度控制 并且需要 设定速度到某个值 那就逐渐增加 kv 直到你的速度达到设定值
+// kv 是一个放大系数，当我的速度不够的时候，用这个来提高我的速度达到预期
+
+// Increase kp until the output starts to oscillate around the setpoint.
+// 逐渐增加 kp 值直到我的当前位置开始在设定的位置开始震动
+// kp 在一般般情况下 如果这个电机没有额外的减速比 而且
+
+// Increase kd as much as possible without introducing jittering to the response.
+// 逐渐增加 kd 直到引入了新的震动
+
+// kp 决定了电机的劲大还是小 比较重要 ✔
+// ki 一般不用
+// kd 用的也少

@@ -58,13 +58,14 @@ public class RobotContainer {
 
     //实际在程序里要写就用这个写法
     m_driverController.b() //Trigger对象
-    .whileTrue(m_DriveSubsystem.Motor_Voltage_Command(2)); //摁下的时候
+    .whileTrue(m_DriveSubsystem.Motor_Velocity_Command(2)); //摁下的时候
+                                //Motor_Position_Command
     
     m_driverController.a() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Voltage_Command2(2));
+    .onTrue(m_DriveSubsystem.Motor_Velocity_Command2(2));
     
     m_driverController.x() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Voltage_Command2(0));
+    .onTrue(m_DriveSubsystem.Motor_Velocity_Command2(0));
   }
 
   // /**

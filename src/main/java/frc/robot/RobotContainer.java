@@ -53,8 +53,14 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.b().onTrue(m_drive_subsystem.mortor_Position_command_2(10));//.andThen(m_CANdleSystem.setFire_Command())
-    m_driverController.a().onTrue(m_drive_subsystem.mortor_Position_command_2(0));//.andThen(m_CANdleSystem.setFire_Command())
+    m_driverController.b().onTrue(m_drive_subsystem.mortor_Position_command(30, 10)
+                            .andThen(m_drive_subsystem.mortor_Position_command_2(0))
+                            .andThen(m_CANdleSystem.setRainbow_Command()));//.andThen(m_CANdleSystem.setFire_Command()).andThen(m_drive_subsystem.mortor_Position_command_2(0))
+   
+   
+    m_driverController.a().onTrue(m_drive_subsystem.mortor_Position_command(0,-10)
+                            .andThen(m_drive_subsystem.mortor_Position_command_2(0))
+                            .andThen(m_CANdleSystem.setFire_Command()));//.andThen(m_CANdleSystem.setFire_Command()).andThen(m_drive_subsystem.mortor_Position_command_2(0))
     //m_driverController.x().whileFalse(m_drive_subsystem.mortor_Voltage_command_2(0));
   }
 
@@ -68,3 +74,8 @@ public class RobotContainer {
     //return Autos.exampleAuto(m_exampleSubsystem);
   //}
 }
+//用速度控制和位置控制分别控制直驱轮和转向轮，速度控制用velocitycurrentfoc，注意电机参数
+//                                        位置控制用velocitycurrentfoc，注意电机参数
+
+//实现的目标：按下一个按键，转向轮位置到50，直驱电机以10的速度旋转，当转向轮位置到达后，两个电机都停止运动，亮一种花样灯效
+//按下第二个按键，转向轮位置到50，直驱电机以10的速度旋转，当转向轮位置到达后，两个电机都停止运动，亮一种花样灯效

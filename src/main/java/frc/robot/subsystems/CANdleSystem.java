@@ -101,15 +101,20 @@ public class CANdleSystem extends SubsystemBase {
         m_candle.setLEDs(0, 0, 0);
         m_candle.setLEDs(0, 0, 0);
         changeAnimation(AnimationTypes.SetAll);
-
     }
 
     public void setFire() {
         m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
     }
-    
+   
     public Command setFire_Command() {
         return runOnce(()->{setFire();});
+    }
+    public void setRainbow() {
+        m_toAnimate = new RainbowAnimation(0.5, 0.7, LedCount,true, 1);
+    }
+    public Command setRainbow_Command() {
+        return runOnce(()->{setRainbow();});
     }
     public Command setOff_Command() {
         return runOnce(()->{setOff();});

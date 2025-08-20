@@ -25,25 +25,28 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.CANcoder;
 
 public class drive extends SubsystemBase {
-  private final CANcoder cancoder_fl= new CANcoder(5,"rio");
+  private final CANcoder cancoder_fl= new CANcoder(1,"rio");
+
   private final TalonFX m_test_motor = new TalonFX(1, "rio");
   private final PositionTorqueCurrentFOC m_test_motor_request = new PositionTorqueCurrentFOC(0.0);
-  private final TalonFX m_test_motor_2 = new TalonFX(1, "rio");
-  private final PositionTorqueCurrentFOC m_test_motor_request_2 = new PositionTorqueCurrentFOC(0.0);
+  private final TalonFX m_test_motor_2 = new TalonFX(2, "rio");
+  private final VelocityTorqueCurrentFOC m_test_motor_request_2 = new VelocityTorqueCurrentFOC(0.0);
+
   private final TalonFX m_test_motor_3 = new TalonFX(11, "rio");
   private final PositionTorqueCurrentFOC m_test_motor_request_3 = new PositionTorqueCurrentFOC(0.0);
   private final TalonFX m_test_motor_4 = new TalonFX(11, "rio");
   private final PositionTorqueCurrentFOC m_test_motor_request_4 = new PositionTorqueCurrentFOC(0.0);
+
   double expected_position = 50;
   double current_position=0;
   double error= 1.0;
-  public void setmotorPosition_2(double pos) {
-    m_test_motor.setControl(m_test_motor_request_3.withPosition(pos));
-    m_test_motor_4.setControl(m_test_motor_request_4.withPosition(pos));
-    
+
+  public void setmotorPosition(double pos) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(pos));
   }
-  //控制
-  
+  public void setmotorVelosity_2(double vel) {
+    m_test_motor_2.setControl(m_test_motor_request_2.withVelocity(vel));
+  }
   /*public Command mortor_Position_command_2(double pos) {
     return runEnd(
       () -> {
@@ -54,17 +57,25 @@ public class drive extends SubsystemBase {
       }
     );
   }*/
-  public Boolean isAtPostion(){
+
+  public Boolean isAtPostion(double expected_position){
     current_position=m_test_motor.getPosition().getValueAsDouble();
     return (Math.abs(expected_position-current_position)<=error);
   }
-  public Command mortor_Position_command_2(double pos) {
+
+  public Command mortor_Position_command(double pos,double vel) {
     return run(
       () -> {
-        setmotorPosition_2(pos);
-      }).until(()->isAtPostion());
+        setmotorPosition(pos);
+        setmotorVelosity_2(vel);
+      }).until(()->isAtPostion(pos));
   }
-
+  public Command mortor_Position_command_2(double vel) {
+    return runOnce(
+      () -> {
+        setmotorVelosity_2(vel);
+      });
+  }
   /** Creates a new ExampleSubsystem. */
   public drive() {
         //电机参数配置
@@ -82,23 +93,37 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-    m_test_motor.getConfigurator().apply(motorConfigs);
-    m_test_motor_2.getConfigurator().apply(motorConfigs);
-    m_test_motor_3.getConfigurator().apply(motorConfigs);
-    m_test_motor_4.getConfigurator().apply(motorConfigs);
+    var motorConfigs_2 = new TalonFXConfiguration();
+    motorConfigs_2.Slot0.kS = 1.6;
+    motorConfigs_2.Slot0.kV = 0.0;
+    motorConfigs_2.Slot0.kA = 0;
+    motorConfigs_2.Slot0.kP = 3;
+    motorConfigs_2.Slot0.kI = 0;
+    motorConfigs_2.Slot0.kD = 0.1;
 
-    //与电机产生联系
-    motorConfigs.Feedback.FeedbackRemoteSensorID=cancoder_fl.getDeviceID();
-    motorConfigs.Feedback.FeedbackSensorSource=FeedbackSensorSourceValue.FusedCANcoder;
-    motorConfigs.Feedback.RotorToSensorRatio = 13;//减速比（也许
+    motorConfigs_2.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
+    motorConfigs_2.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
+    motorConfigs_2.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+    motorConfigs_2.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+    motorConfigs_2.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-//cancoder参数配置
+
+    //cancoder参数配置
     var motorEncoderConfigs= new CANcoderConfiguration();
     motorEncoderConfigs.MagnetSensor.MagnetOffset=0;//字面
     motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际范围映射的范围
     motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
     cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
 
+
+    //与电机产生联系
+    motorConfigs.Feedback.FeedbackRemoteSensorID=cancoder_fl.getDeviceID();
+    motorConfigs.Feedback.FeedbackSensorSource=FeedbackSensorSourceValue.FusedCANcoder;
+    motorConfigs.Feedback.RotorToSensorRatio = 13;//减速比（也许
+
+
+    m_test_motor.getConfigurator().apply(motorConfigs);
+    m_test_motor_2.getConfigurator().apply(motorConfigs_2);
 
   }
 
@@ -118,3 +143,10 @@ Increase Kp until the output starts to oscillate around the setpoint.增加Kp直
 Increase Kd as much as possible without introducing jittering to the response.加Kd直到真的开始震
 Kp决定了电机劲大小=）
  */
+
+
+//用速度控制和位置控制分别控制直驱轮和转向轮，速度控制用velocitycurrentfoc，注意电机参数
+//                                        位置控制用motionmagicvoltage，注意电机参数
+
+//实现的目标：按下一个按键，转向轮位置到50，直驱电机以-10的速度旋转，当转向轮位置到达后，两个电机都停止运动，亮一种灯效
+//按下第二个按键，转向轮位置到50，直驱电机以10的速度旋转，当转向轮位置到达后，两个电机都停止运动，亮一另种花样灯效

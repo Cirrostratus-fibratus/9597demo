@@ -5,9 +5,13 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.CANdleSystem;
 //import frc.robot.commands.Autos;
 //import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.drive;
+import frc.robot.subsystems.CANdleSystem;
+import com.ctre.phoenix.led.FireAnimation;
+
 //import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -19,13 +23,14 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
+  // The robot's subsystems and commands are defi ned here...
   private final drive m_drive_subsystem = new drive();
-
+  private final CANdleSystem m_CANdleSystem= new CANdleSystem();
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
+    
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
@@ -48,16 +53,15 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.b().onTrue(m_drive_subsystem.mortor_Velocity_command(20));
-    m_driverController.a().onTrue(m_drive_subsystem.mortor_Velocity_command_2(0));
-    m_driverController.x().whileTrue(m_drive_subsystem.mortor_Velocity_command_2(20));
+    m_driverController.b().onTrue(m_drive_subsystem.mortor_Position_command_2(10));//.andThen(m_CANdleSystem.setFire_Command())
+    m_driverController.a().onTrue(m_drive_subsystem.mortor_Position_command_2(0));//.andThen(m_CANdleSystem.setFire_Command())
     //m_driverController.x().whileFalse(m_drive_subsystem.mortor_Voltage_command_2(0));
   }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
-   * @return the command to run in autonomous
+   * @return the command to run in autonomo
    */
   //public Command getAutonomousCommand() {
     // An example command will be run in autonomous

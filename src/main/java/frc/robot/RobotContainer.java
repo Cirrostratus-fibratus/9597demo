@@ -15,6 +15,7 @@ import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.FireAnimation;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger; //从其他文件夹里import
 
@@ -30,10 +31,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger; //从其他文件夹里imp
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final Drive m_DriveSubsystem = new Drive();//实例化：要用另外一个类里的方法，实例化就是告诉程序去哪个类里找
+  private final Drive m_DriveSubsystem = new Drive(); //实例化：要用另外一个类里的方法，实例化就是告诉程序去哪个类里找
 
   private final int LedCount = 300;
    private final CANdleSystem m_candle = new CANdleSystem();
+
    private Animation m_toAnimate = null;
 
    public enum AnimationTypes{
@@ -84,10 +86,14 @@ public class RobotContainer {
                                 //Motor_Position_Command
     
     m_driverController.a() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Position_Command2(10).andThen(m_candle.set_Fire()));
+    .onTrue(m_DriveSubsystem.Motor_Position_Command2(10.1 , 10)
+    .andThen(m_DriveSubsystem.Motor_Velocity_Command(0))
+    .andThen(m_candle.set_Fire()));
     
     m_driverController.x() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Position_Command2(0).andThen(m_candle.set_Candle_off()));
+    .onTrue(m_DriveSubsystem.Motor_Position_Command2(0, -10)
+    .andThen(m_DriveSubsystem.Motor_Velocity_Command(0))
+    .andThen(m_candle.set_Larson()));
   }
 
   // /**

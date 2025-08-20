@@ -21,15 +21,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drive extends SubsystemBase {
 
-  private final TalonFX m_test_motor = new TalonFX(5, "rio");
-  // private final TalonFX m_test_motor2 = new TalonFX(1, "rio");
+  private final TalonFX m_test_motor = new TalonFX(1, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(2, "rio");
   // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
   // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
 
-  private final CANcoder cancoder_fl = new CANcoder(3,"rio");
+  private final CANcoder cancoder_fl = new CANcoder(1,"rio");
 
 
-    double ExpectedPosition = 50.0;
+    //double ExpectedPosition = 10.0;
 
     double CurrentPosition = 0.0;
 
@@ -40,7 +40,7 @@ public class Drive extends SubsystemBase {
 
     //特性：请求制 需要一个request
     private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
-    // private final MotionMagicVoltage m_test_motor2_request = new MotionMagicVoltage(0.0);
+    private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
     // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
     // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
     //通过m_test_motor_request向上发送请求
@@ -63,11 +63,11 @@ public class Drive extends SubsystemBase {
 
     }
 
-    // public void setmotorPosition2(double Position) {
-    //   m_test_motor3.setControl(m_test_motor_request.withPosition(Position));
+    public void setmotorVelocity(double Velocity) {
+      m_test_motor2.setControl(m_test_motor2_request.withVelocity(Velocity));
     //   m_test_motor4.setControl(m_test_motor_request.withPosition(Position)); //声明这个控制是速度还是位置
     
-
+    }
 
 
     public Command Motor_Position_Command(double vol){ 
@@ -79,18 +79,27 @@ public class Drive extends SubsystemBase {
                          });
       }
 
-      public boolean isAtPosition(){
+      public boolean isAtPosition(double ExpectedPosition){
         CurrentPosition = m_test_motor.getPosition().getValueAsDouble();
 
         return (Math.abs(ExpectedPosition - CurrentPosition) <= AcceptedError);
       }
 
-    public Command Motor_Position_Command2(double Position){ 
+
+    public Command Motor_Position_Command2(double Position , double Velocity){ 
       return run(
         () -> { //run == runOnce
-          setmotorPosition(Position); // Set the motor to move at 1000 units per second
+          setmotorPosition(Position); 
+          setmotorVelocity(Velocity); 
         })
-        .until(() -> isAtPosition());
+        .until(() -> isAtPosition(Position));
+    } 
+
+    public Command Motor_Velocity_Command( double Velocity){ 
+      return runOnce(
+        () -> { //run == runOnce
+          setmotorVelocity(Velocity); 
+        });
     } 
   
   //构造函数：初始化子系统，读取电机的固定参数
@@ -126,7 +135,16 @@ public class Drive extends SubsystemBase {
       motorConfigs.Feedback.RotorToSensorRatio = 13;
 
       m_test_motor.getConfigurator().apply(motorConfigs);
-      // m_test_motor2.getConfigurator().apply(motorConfigs);
+
+      var motorConfigs1 = new TalonFXConfiguration();
+      motorConfigs1.Slot0.kS = 1.6; //kS是电机参数 这句话读到kS然后给他赋值
+      motorConfigs1.Slot0.kV = 0.0;
+      motorConfigs1.Slot0.kA = 0;
+      motorConfigs1.Slot0.kP = 2;
+      motorConfigs1.Slot0.kI = 0;
+      motorConfigs1.Slot0.kD = 0;
+      
+      m_test_motor2.getConfigurator().apply(motorConfigs1);
 
       //voltage控制比较低级 不受pid影响
 
@@ -174,6 +192,7 @@ public class Drive extends SubsystemBase {
   //   // This method will be called once per scheduler run during simulation
   // }
 }
+
 
 //拆分：把复杂的东西简单化
 

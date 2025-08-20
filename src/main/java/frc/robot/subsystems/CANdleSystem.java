@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class CANdleSystem extends SubsystemBase {
-    private final CANdle m_candle = new CANdle(2, "rio"); //声明灯带对象
+    private final CANdle m_candle = new CANdle(1, "rio"); //声明灯带对象
     private final int LedCount = 300; //灯珠数量 ，设得比较小 那灯带有可能只亮一半
     private XboxController joystick;
 
@@ -190,8 +190,14 @@ public class CANdleSystem extends SubsystemBase {
     }
 
     public Command set_Fire(){
-        return run(()->{ //run == runOnce
+        return runOnce(()->{ //run == runOnce
             m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
+            });
+    }
+
+    public Command set_Larson(){
+        return runOnce(()->{ //run == runOnce
+            m_toAnimate = new LarsonAnimation(0, 255, 46, 0, 1, LedCount, BounceMode.Front, 3);
             });
     }
 

@@ -6,11 +6,19 @@ package frc.robot;
 //包：功能包，负责某一类特定的功能
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.CANdleSystem;
 // import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.Drive;
+
+import com.ctre.phoenix.led.Animation;
+import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix.led.FireAnimation;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger; //从其他文件夹里import
+
+
 
 //从其他程序import进来
 
@@ -24,6 +32,15 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Drive m_DriveSubsystem = new Drive();//实例化：要用另外一个类里的方法，实例化就是告诉程序去哪个类里找
 
+  private final int LedCount = 300;
+   private final CANdleSystem m_candle = new CANdleSystem();
+   private Animation m_toAnimate = null;
+
+   public enum AnimationTypes{
+    Fire,
+ }
+
+ private AnimationTypes m_currentAnimation;
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -33,6 +50,11 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
   }
+
+  public void setFire() {
+        m_toAnimate = new FireAnimation(0.5, 0.7, LedCount, 0.7, 0.5);
+    }
+
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -58,14 +80,14 @@ public class RobotContainer {
 
     //实际在程序里要写就用这个写法
     m_driverController.b() //Trigger对象
-    .whileTrue(m_DriveSubsystem.Motor_Velocity_Command(2)); //摁下的时候
+    .whileTrue(m_DriveSubsystem.Motor_Position_Command(2)); //摁下的时候
                                 //Motor_Position_Command
     
     m_driverController.a() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Velocity_Command2(2));
+    .onTrue(m_DriveSubsystem.Motor_Position_Command2(10).andThen(m_candle.set_Fire()));
     
     m_driverController.x() //Trigger对象
-    .onTrue(m_DriveSubsystem.Motor_Velocity_Command2(0));
+    .onTrue(m_DriveSubsystem.Motor_Position_Command2(0).andThen(m_candle.set_Candle_off()));
   }
 
   // /**

@@ -4,11 +4,15 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -17,19 +21,32 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drive extends SubsystemBase {
 
-  private final TalonFX m_test_motor = new TalonFX(2, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(1, "rio");
-  private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
-  private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+  private final TalonFX m_test_motor = new TalonFX(5, "rio");
+  // private final TalonFX m_test_motor2 = new TalonFX(1, "rio");
+  // private final TalonFX m_test_motor3 = new TalonFX(3, "rio");
+  // private final TalonFX m_test_motor4 = new TalonFX(4, "rio");
+
+  private final CANcoder cancoder_fl = new CANcoder(3,"rio");
+
+
+    double ExpectedPosition = 50.0;
+
+    double CurrentPosition = 0.0;
+
+    double AcceptedError = 1.0;
+
 
 
 
     //特性：请求制 需要一个request
-    private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
-    private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
-    private final VelocityTorqueCurrentFOC m_test_motor3_request = new VelocityTorqueCurrentFOC(0.0);
-    private final VelocityTorqueCurrentFOC m_test_motor4_request = new VelocityTorqueCurrentFOC(0.0);
+    private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+    // private final MotionMagicVoltage m_test_motor2_request = new MotionMagicVoltage(0.0);
+    // private final MotionMagicVoltage m_test_motor3_request = new MotionMagicVoltage(0.0);
+    // private final MotionMagicVoltage m_test_motor4_request = new MotionMagicVoltage(0.0);
     //通过m_test_motor_request向上发送请求
+
+   
+
     
     //实际控制
     //封装出来的方法
@@ -40,47 +57,60 @@ public class Drive extends SubsystemBase {
     //withPosition能够把高级的控控制请求和底层的位置控制建立联系
     //withVelocity能够把高级的控控制请求和底层的速度控制建立联系
 
-    public void setmotorVelocity(double Position) {
-      m_test_motor.setControl(m_test_motor_request.withVelocity(Position));
-      m_test_motor2.setControl(m_test_motor_request.withVelocity(Position));
+    public void setmotorPosition(double Position) {
+      m_test_motor.setControl(m_test_motor_request.withPosition(Position));
+      // m_test_motor2.setControl(m_test_motor_request.withPosition(Position));
 
     }
 
-    public void setmotorVelocity2(double Position) {
-      m_test_motor3.setControl(m_test_motor_request.withVelocity(Position));
-      m_test_motor4.setControl(m_test_motor_request.withVelocity(Position)); //声明这个控制是速度还是位置
-    }
+    // public void setmotorPosition2(double Position) {
+    //   m_test_motor3.setControl(m_test_motor_request.withPosition(Position));
+    //   m_test_motor4.setControl(m_test_motor_request.withPosition(Position)); //声明这个控制是速度还是位置
+    
 
 
 
-
-    public Command Motor_Velocity_Command(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
-      return runEnd(()->{ //run == runOnce
-                        setmotorVelocity(vol); // Set the motor to move at 1000 units per second
+    public Command Motor_Position_Command(double vol){ 
+      return runEnd(()->{  //runEnd能够让你摁住的时候转，松开的时候停
+                        setmotorPosition(vol); // Set the motor to move at 1000 units per second
                         },
                     ()-> {
-                          setmotorVelocity(0);
+                          setmotorPosition(0);
                          });
       }
 
-    public Command Motor_Velocity_Command2(double vol){ //runEnd能够让你摁住的时候转，松开的时候停
-      return run(()->{ //run == runOnce
-                          setmotorVelocity(vol); // Set the motor to move at 1000 units per second
-                          });
+      public boolean isAtPosition(){
+        CurrentPosition = m_test_motor.getPosition().getValueAsDouble();
+
+        return (Math.abs(ExpectedPosition - CurrentPosition) <= AcceptedError);
       }
+
+    public Command Motor_Position_Command2(double Position){ 
+      return run(
+        () -> { //run == runOnce
+          setmotorPosition(Position); // Set the motor to move at 1000 units per second
+        })
+        .until(() -> isAtPosition());
+    } 
   
   //构造函数：初始化子系统，读取电机的固定参数
   public Drive() {
 
+     var motorEncoderConfigs = new CANcoderConfiguration();
+      motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;//offset
+      motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际生活中电机的范围
+      motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+      cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
+
     var motorConfigs = new TalonFXConfiguration();
       
     //这些是每个电机的固定参数
-      motorConfigs.Slot0.kS = 1.5; //kS是电机参数 这句话读到kS然后给他赋值
+      motorConfigs.Slot0.kS = 0.14; //kS是电机参数 这句话读到kS然后给他赋值
       motorConfigs.Slot0.kV = 0.0;
       motorConfigs.Slot0.kA = 0;
-      motorConfigs.Slot0.kP = 7;
+      motorConfigs.Slot0.kP = 2;
       motorConfigs.Slot0.kI = 0;
-      motorConfigs.Slot0.kD = 0.1;
+      motorConfigs.Slot0.kD = 0;
 
 
       //涉及到高级控制 才用到这些参数
@@ -90,8 +120,13 @@ public class Drive extends SubsystemBase {
       motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
       motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
+      //建立电机和cancoder的联系
+      motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+      motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+      motorConfigs.Feedback.RotorToSensorRatio = 13;
+
       m_test_motor.getConfigurator().apply(motorConfigs);
-      m_test_motor2.getConfigurator().apply(motorConfigs);
+      // m_test_motor2.getConfigurator().apply(motorConfigs);
 
       //voltage控制比较低级 不受pid影响
 
@@ -199,7 +234,7 @@ public class Drive extends SubsystemBase {
 
 // Increase kp until the output starts to oscillate around the setpoint.
 // 逐渐增加 kp 值直到我的当前位置开始在设定的位置开始震动
-// kp 在一般般情况下 如果这个电机没有额外的减速比 而且
+
 
 // Increase kd as much as possible without introducing jittering to the response.
 // 逐渐增加 kd 直到引入了新的震动
@@ -207,3 +242,13 @@ public class Drive extends SubsystemBase {
 // kp 决定了电机的劲大还是小 比较重要 ✔
 // ki 一般不用
 // kd 用的也少
+
+
+//andthen()
+//until
+//run()
+//runOnce()
+//runEnd()
+
+//whileTrue
+//onTrue

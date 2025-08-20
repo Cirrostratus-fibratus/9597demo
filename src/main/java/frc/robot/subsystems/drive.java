@@ -4,52 +4,73 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-//import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.ctre.phoenix6.hardware.CANcoder;
 
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import frc.robot.Constants;
+
 public class drive extends SubsystemBase {
 
-  private final TalonFX m_test_motor = new TalonFX(2, "rio");
-  private final VelocityTorqueCurrentFOC m_test_motor_request = new VelocityTorqueCurrentFOC(0.0);
+  private final CANcoder  cancoder_fl = new CANcoder(2,"rio");
+
+  private final TalonFX m_test_motor = new TalonFX(5, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(6, "rio");
+  private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
+  private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
 
   // public void setmotorPosition(double vol) {
   //   m_test_motor.setControl(m_test_motor_request.withPosition(vol));
 
   // }
 
-  public void setmotorVol(double vol) {
-    m_test_motor.setControl(m_test_motor_request.withVelocity(vol));
+  double expected_position = 10;
+  double current_position = 0;
+  double error = 1.0;
+
+  public void setmotorPosition(double position) {
+    m_test_motor.setControl(m_test_motor_request.withPosition(position));
 
   }
 
-  public Command motor_Vol_command(double Vol){
+  public void setmotorVol(double Velocity){
+    m_test_motor2.setControl(m_test_motor2_request.withVelocity(Velocity));
+  }
 
-    return runEnd(()->{
-                  setmotorVol(Vol);
-                  },
-                  ()->{
-                    setmotorVol(0);
+  public Command motor_Position_command(double Position){
+
+    return runOnce(()->{
+                  setmotorPosition(Position);
                   });
   }
   //控制电压
 
   /** Creates a new ExampleSubsystem. */
   public drive() {
+    var motorEncoderConfigs = new CANcoderConfiguration();
+    motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;//offset
+    motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际生活中的电机位什么范围
+    motorEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+    cancoder_fl.getConfigurator().apply(motorEncoderConfigs);
+
     var motorConfigs = new TalonFXConfiguration();
 
      motorConfigs.Slot0.kS = 0.142;
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
-    motorConfigs.Slot0.kP = 3;
-    motorConfigs.Slot0.kI = 0;
+    motorConfigs.Slot0.kP = 2;
     motorConfigs.Slot0.kD = 0;
     motorConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
     motorConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
@@ -57,12 +78,61 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
+    //建立电机和cancoder的联系
+    motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
+    motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    motorConfigs.Feedback.RotorToSensorRatio = 13;
+
     m_test_motor.getConfigurator().apply(motorConfigs);
+
+    var motorConfigs2 = new TalonFXConfiguration();
+
+   motorConfigs2.Slot0.kS = 0.16;
+   motorConfigs2.Slot0.kV = 0.0;
+   motorConfigs2.Slot0.kA = 0;
+   motorConfigs2.Slot0.kP = 2;
+   motorConfigs2.Slot0.kI = 0;
+   motorConfigs2.Slot0.kD = 0;
+
+   m_test_motor2.getConfigurator().apply(motorConfigs2);
 
   }
 
+  public Boolean isAtPosition(double expected_position){
+    current_position = m_test_motor.getPosition().getValueAsDouble();
+    return (Math.abs(expected_position-current_position)<=error);
+  }
+
+   public void m_setMotorPosition(double position){
+       m_test_motor.setControl(m_test_motor_request.withPosition(position));
+   }
+
+   public void m_setMotorVel(double Vel){
+    m_test_motor2.setControl(m_test_motor2_request.withVelocity(Vel));
 }
 
+   public Command  cmd_motor_SetPosition_velocity(double vel,double position){
+      return run(
+          ()->{
+             m_setMotorPosition(position);
+             m_setMotorVel(vel);
+          })
+          .until(()->isAtPosition(position));
+    }
+
+   public double getMotorPosition(){
+     return m_test_motor.getPosition().getValueAsDouble();
+   }
+
+   public Command teskStop(){
+
+    return runOnce(
+      ()->{
+         m_setMotorVel(0);
+      });
+   }
+
+}
 
 //Manual tuning typically follows this process:
 

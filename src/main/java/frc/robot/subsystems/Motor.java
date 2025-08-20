@@ -71,6 +71,14 @@ public class Motor extends SubsystemBase {
 
   }
 
+  // public Command  cmd_motor_SetPosition(){
+  //   return run(
+  //       ()->{
+  //          m_setMotorPosition(Constants.MOTOR.MORTOR_POSITION_1);
+  //       })
+  //       .until(()->isAtPosition());
+  // }
+
   public Command Motor_Move_Position1(){
     return run(()->{
       setmotorPosition(50); // Set the motor to move at 1000 units per second

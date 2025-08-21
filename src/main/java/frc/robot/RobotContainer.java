@@ -87,12 +87,10 @@ public class RobotContainer {
     
     m_driverController.a() //Trigger对象
     .onTrue(m_DriveSubsystem.Motor_Position_Command2(10.1 , 10)
-    .andThen(m_DriveSubsystem.Motor_Velocity_Command(0))
     .andThen(m_candle.set_Fire()));
     
     m_driverController.x() //Trigger对象
     .onTrue(m_DriveSubsystem.Motor_Position_Command2(0, -10)
-    .andThen(m_DriveSubsystem.Motor_Velocity_Command(0))
     .andThen(m_candle.set_Larson()));
   }
 

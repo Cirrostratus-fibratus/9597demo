@@ -16,4 +16,14 @@ public final class Constants { //常量
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+
+public static class Motor{
+  public static final int Motor_1_ID = 1; //不会变的值前面写final
+  public static final int Motor_2_ID = 2;
+  public static final int Cancoder_1_ID = 1;
+
+  
+
+}
+
 }

@@ -20,6 +20,14 @@ public final class Constants {
     public static final int CANdleID = 2;
   }
   public static class MOTOR{
-    public static final int MORTOR_POSITION_1 = 0;
+    public static final int MORTOR1_ID = 5;
+    public static final int MORTOR2_ID = 6;
+    public static final int CANCODER_ID = 2;
+
+    public static final double MORTOR_POSITION_1 = 50.0;
+    public static final double MORTOR_POSITION_2 = 0;
+
+    public static final double MORTOR_Vel_1 = 10.0;
+    public static final double MORTOR_Vel_2 = -10.0;
   }
 }

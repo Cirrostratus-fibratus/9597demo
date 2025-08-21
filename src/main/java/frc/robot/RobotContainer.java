@@ -51,12 +51,10 @@ public class RobotContainer {
 
     m_driverController.b()
         .onTrue(m_drive_subsystem.cmd_motor_SetPosition_velocity(10,50)
-        .andThen(m_drive_subsystem.teskStop())
         .andThen( m_candle_system.setColorFlowWithMotor()));
       
     m_driverController.a()
         .onTrue(m_drive_subsystem.cmd_motor_SetPosition_velocity(-10,0)
-        .andThen(m_drive_subsystem.teskStop())
         .andThen( m_candle_system.setFireWithMotor()));
       }
 

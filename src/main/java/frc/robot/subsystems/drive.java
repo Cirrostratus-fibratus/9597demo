@@ -24,10 +24,10 @@ import frc.robot.Constants;
 
 public class drive extends SubsystemBase {
 
-  private final CANcoder  cancoder_fl = new CANcoder(2,"rio");
+  private final CANcoder  cancoder_fl = new CANcoder(Constants.MOTOR.CANCODER_ID,"rio");
 
-  private final TalonFX m_test_motor = new TalonFX(5, "rio");
-  private final TalonFX m_test_motor2 = new TalonFX(6, "rio");
+  private final TalonFX m_test_motor = new TalonFX(Constants.MOTOR.MORTOR1_ID, "rio");
+  private final TalonFX m_test_motor2 = new TalonFX(Constants.MOTOR.MORTOR2_ID, "rio");
   private final MotionMagicVoltage m_test_motor_request = new MotionMagicVoltage(0.0);
   private final VelocityTorqueCurrentFOC m_test_motor2_request = new VelocityTorqueCurrentFOC(0.0);
 
@@ -38,16 +38,16 @@ public class drive extends SubsystemBase {
 
   double expected_position = 10;
   double current_position = 0;
-  double error = 1.0;
+  double error = 1.0;//设置三个变量用来判断电机有没有达到范围内
 
   public void setmotorPosition(double position) {
     m_test_motor.setControl(m_test_motor_request.withPosition(position));
 
-  }
+  }//用位置控制电机
 
   public void setmotorVol(double Velocity){
     m_test_motor2.setControl(m_test_motor2_request.withVelocity(Velocity));
-  }
+  }//用速度控制电机
 
   public Command motor_Position_command(double Position){
 
@@ -55,10 +55,12 @@ public class drive extends SubsystemBase {
                   setmotorPosition(Position);
                   });
   }
-  //控制电压
+  //写出位置控制的电机的相应方法
 
-  /** Creates a new ExampleSubsystem. */
   public drive() {
+    //设置两个电机，声明他们
+
+    //cancoder电机参数配置
     var motorEncoderConfigs = new CANcoderConfiguration();
     motorEncoderConfigs.MagnetSensor.MagnetOffset=0.0;//offset
     motorEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;//实际生活中的电机位什么范围
@@ -67,6 +69,7 @@ public class drive extends SubsystemBase {
 
     var motorConfigs = new TalonFXConfiguration();
 
+    //位置控制电机1参数配置
      motorConfigs.Slot0.kS = 0.142;
     motorConfigs.Slot0.kV = 0.0;
     motorConfigs.Slot0.kA = 0;
@@ -78,15 +81,15 @@ public class drive extends SubsystemBase {
     motorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
     motorConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-    //建立电机和cancoder的联系
+    //feedback,建立电机和cancoder的联系
     motorConfigs.Feedback.FeedbackRemoteSensorID = cancoder_fl.getDeviceID();
     motorConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     motorConfigs.Feedback.RotorToSensorRatio = 13;
 
     m_test_motor.getConfigurator().apply(motorConfigs);
 
+    //速度控制电机2参数配置
     var motorConfigs2 = new TalonFXConfiguration();
-
    motorConfigs2.Slot0.kS = 0.16;
    motorConfigs2.Slot0.kV = 0.0;
    motorConfigs2.Slot0.kA = 0;
@@ -98,42 +101,43 @@ public class drive extends SubsystemBase {
 
   }
 
+  //返回电机1的当前位置
+  public double getMotorPosition(){
+     return m_test_motor.getPosition().getValueAsDouble();
+  }
+ 
+  //位置控制电机1
+  public void m_setMotorPosition(double position){
+    m_test_motor.setControl(m_test_motor_request.withPosition(position));
+}
+
+   //速度控制电机2
+  public void m_setMotorVel(double Vel){
+    m_test_motor2.setControl(m_test_motor2_request.withVelocity(Vel));
+  }
+
+  //判断电机是否达到位
   public Boolean isAtPosition(double expected_position){
     current_position = m_test_motor.getPosition().getValueAsDouble();
     return (Math.abs(expected_position-current_position)<=error);
   }
 
-   public void m_setMotorPosition(double position){
-       m_test_motor.setControl(m_test_motor_request.withPosition(position));
-   }
-
-   public void m_setMotorVel(double Vel){
-    m_test_motor2.setControl(m_test_motor2_request.withVelocity(Vel));
-}
-
+  //打包一起位置和速度控制的电机，这样他们能同时运行
    public Command  cmd_motor_SetPosition_velocity(double vel,double position){
       return run(
           ()->{
              m_setMotorPosition(position);
              m_setMotorVel(vel);
           })
-          .until(()->isAtPosition(position));
+          .until(()->isAtPosition(position))
+          .finallyDo(()->{ //运行完一些列动作后，控制电机停止运行
+               m_setMotorVel(0);
+               m_setMotorPosition(getMotorPosition());
+            });
     }
+  }
 
-   public double getMotorPosition(){
-     return m_test_motor.getPosition().getValueAsDouble();
-   }
-
-   public Command teskStop(){
-
-    return runOnce(
-      ()->{
-         m_setMotorVel(0);
-      });
-   }
-
-}
-
+  
 //Manual tuning typically follows this process:
 
 // Set all gains to zero.

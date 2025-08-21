@@ -20,4 +20,11 @@ public final class Constants {
     public static final int CANdleID = 2;
     //public static final string candle;
   }
+  public static class motor {
+    public static final int m_test_motor_id=1;
+    public static final int m_test_motor_2_id=2;
+    public static double expected_position = 50;//初始化
+    public static double current_position=0;//初始化
+    public static double error= 1.0;//可接受误差
+  }
 }

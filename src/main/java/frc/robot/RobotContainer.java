@@ -9,8 +9,8 @@ import frc.robot.subsystems.CANdleSystem;
 //import frc.robot.commands.Autos;
 //import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.drive;
-import frc.robot.subsystems.CANdleSystem;
-import com.ctre.phoenix.led.FireAnimation;
+//import frc.robot.subsystems.CANdleSystem;
+//import com.ctre.phoenix.led.FireAnimation;
 
 //import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -54,16 +54,14 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.b().onTrue(m_drive_subsystem.mortor_Position_command(30, 10)
-                            .andThen(m_drive_subsystem.mortor_Position_command_2(0))
-                            .andThen(m_CANdleSystem.setRainbow_Command()));//.andThen(m_CANdleSystem.setFire_Command()).andThen(m_drive_subsystem.mortor_Position_command_2(0))
+                          .andThen(m_drive_subsystem.mortor_Position_command_2(0)));//.andThen(m_CANdleSystem.setFire_Command())
    
    
     m_driverController.a().onTrue(m_drive_subsystem.mortor_Position_command(0,-10)
-                            .andThen(m_drive_subsystem.mortor_Position_command_2(0))
-                            .andThen(m_CANdleSystem.setFire_Command()));//.andThen(m_CANdleSystem.setFire_Command()).andThen(m_drive_subsystem.mortor_Position_command_2(0))
+                          .andThen(m_drive_subsystem.mortor_Position_command_2(0)));//.andThen(m_CANdleSystem.setFire_Command())
+
     //m_driverController.x().whileFalse(m_drive_subsystem.mortor_Voltage_command_2(0));
   }
-
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
